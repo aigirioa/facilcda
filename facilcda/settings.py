@@ -27,7 +27,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast = bool, default = False)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast = Csv())
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast = Csv(), default = '')
 
 
 # Application definition
@@ -43,6 +43,11 @@ DEFAULT_APPS = [
 
 LOCAL_APPS = [
     'users',
+    'configuration',
+    'customers',
+    'vehicles',
+    'appointments',
+    'inspections',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + LOCAL_APPS
@@ -82,7 +87,7 @@ WSGI_APPLICATION = 'facilcda.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('DB_ENGINE'),
+        'ENGINE': config('DB_ENGINE', default = 'django.db.backends.postgresql_psycopg2'),
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
@@ -114,7 +119,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'es-CO'
+LANGUAGE_CODE = 'es-co'
 
 TIME_ZONE = 'UTC'
 
@@ -136,9 +141,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Auth
-LOGIN_URL = 'users:login'
 
 # Crispy forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
