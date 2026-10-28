@@ -60,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'facilcda.middleware.DisplayTimezoneMiddleware',
 ]
 
 ROOT_URLCONF = 'facilcda.urls'
@@ -121,7 +122,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es-co'
 
+# Se guarda en UTC; la app muestra la hora de Bogotá (facilcda.middleware.DisplayTimezoneMiddleware).
 TIME_ZONE = 'UTC'
+
+DISPLAY_TIME_ZONE = 'America/Bogota'
 
 USE_I18N = True
 
@@ -141,6 +145,13 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Auth (panel del administrador del CDA)
+LOGIN_URL = 'users:login'
+
+LOGIN_REDIRECT_URL = 'appointments:slot_list'
+
+LOGOUT_REDIRECT_URL = 'users:login'
 
 # Crispy forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
