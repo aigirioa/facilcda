@@ -1,0 +1,66 @@
+{% extends 'layouts/admin.html' %}
+
+{% block title %}Franjas horarias - SIGECDA{% endblock title %}
+
+{% block content %}
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+        <h1 class="h4 mb-0">Franjas horarias</h1>
+        <a href="{% url 'appointments:slot_batch_create' %}" class="btn btn-primary">
+            <i class="mdi mdi-calendar-plus"></i> Crear franjas
+        </a>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-12 col-sm-auto">
+                    <label for="fecha" class="form-label mb-1">Fecha</label>
+                    <input type="date" id="fecha" name="fecha" value="{{ selected_date|date:'Y-m-d' }}" class="form-control">
+                </div>
+                <div class="col-12 col-sm-auto d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-primary flex-fill">Ver</button>
+                    <a href="?fecha={{ previous_date|date:'Y-m-d' }}" class="btn btn-light" aria-label="Día anterior">&laquo;</a>
+                    <a href="?fecha={{ today|date:'Y-m-d' }}" class="btn btn-light">Hoy</a>
+                    <a href="?fecha={{ next_date|date:'Y-m-d' }}" class="btn btn-light" aria-label="Día siguiente">&raquo;</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <h2 class="h6 text-muted mb-3">{{ selected_date|date:'l j \d\e F \d\e Y'|capfirst }}</h2>
+
+    {% if slots %}
+        <div class="list-group">
+            {% for slot in slots %}
+                <div class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2 {% if not slot.is_active %}bg-light text-muted{% endif %}">
+                    <div>
+                        <div class="fw-semibold">{{ slot.start_time|time:'H:i' }} – {{ slot.end_time|time:'H:i' }}</div>
+                        <small>
+                            Cupo {{ slot.capacity }} · {{ slot.active_count }} ocupado{{ slot.active_count|pluralize }} · {{ slot.free_count }} libre{{ slot.free_count|pluralize }}
+                        </small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if slot.is_active %}
+                            <span class="badge bg-success">Activa</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactiva</span>
+                        {% endif %}
+                        <form method="post" action="{% url 'appointments:slot_toggle_active' slot.pk %}">
+                            {% csrf_token %}
+                            {% if slot.is_active %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Desactivar</button>
+                            {% else %}
+                                <button type="submit" class="btn btn-sm btn-outline-success">Activar</button>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-light border text-center">
+            No hay franjas para esta fecha.
+            <a href="{% url 'appointments:slot_batch_create' %}">Crear franjas</a>
+        </div>
+    {% endif %}
+{% endblock content %}

@@ -1,0 +1,23 @@
+{% extends 'layouts/base.html' %}
+
+{% block body_class %}public-layout{% endblock body_class %}
+
+{% block navbar %}
+    <nav class="navbar navbar-expand-md bg-white border-bottom shadow-sm">
+        <div class="container px-3">
+            <a class="navbar-brand fw-semibold" href="{% url 'home' %}">SIGECDA</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#publicNavbar"
+                    aria-controls="publicNavbar" aria-expanded="false" aria-label="Abrir menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="publicNavbar">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">Inicio</a>
+                    </li>
+                    {% block public_nav_items %}{% endblock public_nav_items %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+{% endblock navbar %}

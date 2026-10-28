@@ -1,0 +1,52 @@
+{% extends 'layouts/admin.html' %}
+
+{% block title %}Crear franjas - SIGECDA{% endblock title %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <a href="{% url 'appointments:slot_list' %}" class="small">&laquo; Volver a las franjas</a>
+            <h1 class="h4 mt-2 mb-1">Crear franjas en lote</h1>
+            <p class="text-muted small mb-3">
+                Ejemplo: del 1 al 30 de noviembre, de 7:00 a 17:00, cada 30 minutos.
+                Las franjas que ya existan no se duplican.
+            </p>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            {% for field in form %}
+                                <div class="{% if field.name == 'weekdays' %}col-12{% else %}col-12 col-sm-6{% endif %}">
+                                    {% if field.name == 'weekdays' %}
+                                        <span class="form-label d-block">{{ field.label }}</span>
+                                        <div class="d-flex flex-wrap gap-3">
+                                            {% for checkbox in field %}
+                                                <div class="form-check">
+                                                    {{ checkbox.tag }}
+                                                    <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                        {{ field }}
+                                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                                    {% endif %}
+                                    {% for error in field.errors %}
+                                        <div class="text-danger small mt-1">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-grid d-sm-flex justify-content-sm-end mt-4">
+                            <button type="submit" class="btn btn-primary">Crear franjas</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

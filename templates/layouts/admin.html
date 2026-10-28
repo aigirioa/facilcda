@@ -1,0 +1,39 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Panel del CDA - SIGECDA{% endblock title %}
+
+{% block body_class %}admin-layout{% endblock body_class %}
+
+{% block navbar %}
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+        <div class="container px-3">
+            <span class="navbar-brand fw-semibold">SIGECDA <small class="text-white-50">| Panel del CDA</small></span>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar"
+                    aria-controls="adminNavbar" aria-expanded="false" aria-label="Abrir menú">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="adminNavbar">
+                <ul class="navbar-nav me-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'slot_list' or request.resolver_match.url_name == 'slot_batch_create' %}active{% endif %}"
+                               href="{% url 'appointments:slot_list' %}">Franjas</a>
+                        </li>
+                    {% endif %}
+                    {% block admin_nav_items %}{% endblock admin_nav_items %}
+                </ul>
+                {% if user.is_authenticated %}
+                    <div class="d-flex flex-column flex-md-row align-items-md-center gap-2 py-2 py-md-0">
+                        <span class="navbar-text text-white-50">
+                            <i class="mdi mdi-account-circle"></i> {{ user.get_full_name|default:user.username }}
+                        </span>
+                        <form method="post" action="{% url 'users:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-light">Cerrar sesión</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+{% endblock navbar %}

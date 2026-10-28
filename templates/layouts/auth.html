@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,8 +9,74 @@
 
     <meta content="Descripción de la página" name="description" />
     <meta content="" name="author" />
+
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+
+    {% include 'partials/styles.html' %}
 </head>
 <body>
-    <h1>Hola mundo</h1>
+    <div class="auth-page-wrapper pt-5">
+        <!-- auth page content -->
+        <div class="auth-page-content">
+            <div class="container">
+
+                <div class="row justify-content-center">
+                    <div class="col-md-8 col-lg-6 col-xl-5">
+                        <div class="card mt-4">
+
+                            <div class="card-body p-4">
+                                <div class="text-center mt-2">
+                                    <div class="">
+                                        <a href="/" class="d-inline-block auth-logo">
+                                            <img src="{% static 'images/logo-sm.png' %}" alt="logo" height="80">
+                                        </a>
+                                    </div>
+                                    <p class="text-muted">Inicia sesión para continuar</p>
+                                </div>
+
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        <div class="alert
+                                            {% if message.tags == 'error' %}alert-danger {% endif %}
+                                            {% if message.tags == 'success' %}alert-success {% endif %}
+                                            shadow" role="alert">
+                                            {{ message }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+
+                                {% block content %}{% endblock content %}
+
+                            </div>
+                            <!-- end card body -->
+                        </div>
+                        <!-- end card -->
+
+                    </div>
+                </div>
+                <!-- end row -->
+            </div>
+            <!-- end container -->
+        </div>
+        <!-- end auth page content -->
+
+        <!-- footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="text-center">
+                            <p class="mb-0 text-muted">
+                                &copy; <script>document.write(new Date().getFullYear())</script> SIGECDA - Hecho con <i class="mdi mdi-heart text-danger"></i> por <a href="#">Alex Igirio y Lina Restrepo</a>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- end Footer -->
+    </div>
+    <!-- end auth-page-wrapper -->
 </body>
 </html>

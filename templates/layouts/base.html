@@ -1,0 +1,47 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SIGECDA{% endblock title %}</title>
+
+    <meta content="Agendamiento y consulta de la revisión técnico-mecánica en los CDA de Medellín" name="description" />
+    <meta content="" name="author" />
+
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+
+    {% include 'partials/styles.html' %}
+    {% block extra_css %}{% endblock extra_css %}
+</head>
+<body class="{% block body_class %}{% endblock body_class %}">
+    <div class="d-flex flex-column min-vh-100">
+
+        {% block navbar %}{% endblock navbar %}
+
+        <main class="flex-grow-1 py-4">
+            <div class="container px-3">
+                {% include 'partials/messages.html' %}
+
+                {% block content %}{% endblock content %}
+            </div>
+        </main>
+
+        {% block footer %}
+            <footer class="py-3 border-top">
+                <div class="container px-3">
+                    <p class="mb-0 text-center text-muted small">
+                        &copy; <script>document.write(new Date().getFullYear())</script> SIGECDA - Hecho con <i class="mdi mdi-heart text-danger"></i> por <a href="#">Alex Igirio y Lina Restrepo</a>.
+                    </p>
+                </div>
+            </footer>
+        {% endblock footer %}
+
+    </div>
+
+    {% include 'partials/scripts.html' %}
+    {% block extra_js %}{% endblock extra_js %}
+</body>
+</html>

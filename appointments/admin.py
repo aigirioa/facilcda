@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from configuration.models import CdaConfiguration
+
 from .models import Appointment, TimeSlot
 
 
@@ -8,6 +10,11 @@ class TimeSlotAdmin(admin.ModelAdmin):
     list_display = ['date', 'start_time', 'end_time', 'capacity', 'is_active']
     list_filter = ['is_active', 'date']
     date_hierarchy = 'date'
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        initial.setdefault('capacity', CdaConfiguration.get().slot_capacity)
+        return initial
 
 
 @admin.register(Appointment)
