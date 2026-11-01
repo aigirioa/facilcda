@@ -8,16 +8,32 @@ from django.utils.dateparse import parse_date
 from django.views import View
 from django.views.generic import FormView, ListView
 
+from configuration.models import CdaConfiguration
 from facilcda.dates import local_today
 from users.mixins import CdaAdminRequiredMixin
 
 from .forms import TimeSlotBatchForm
 from .models import Appointment, TimeSlot
-from .services import create_time_slots
+from .services import available_time_slots, create_time_slots
 
 
 def slot_list_url(date):
     return f"{reverse('appointments:slot_list')}?fecha={date:%Y-%m-%d}"
+
+
+class AvailableTimeSlotListView(ListView):
+    """Vista pública: franjas disponibles para agendar, agrupadas por fecha en la plantilla."""
+
+    template_name = 'appointments/available_slots.html'
+    context_object_name = 'slots'
+
+    def get_queryset(self):
+        return available_time_slots()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['configuration'] = CdaConfiguration.get()
+        return context
 
 
 class TimeSlotListView(CdaAdminRequiredMixin, ListView):

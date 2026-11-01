@@ -1,8 +1,12 @@
 import datetime
 
 from django.db import transaction
+from django.db.models import Count, F, Q
 
-from .models import TimeSlot
+from configuration.models import CdaConfiguration
+from facilcda.dates import local_now
+
+from .models import Appointment, TimeSlot
 
 
 def build_slot_times(start_time, end_time, interval_minutes):
@@ -49,3 +53,23 @@ def create_time_slots(start_date, end_date, start_time, end_time, interval_minut
 
     created = len(new_slots)
     return created, len(candidates) - created
+
+
+def available_time_slots():
+    """Franjas que el público puede elegir: activas, con cupo libre, sin fechas ni horas pasadas
+    (hora de Bogotá) y hasta max_booking_days días adelante. Ordenadas por fecha y hora.
+    """
+    now = local_now()
+    today = now.date()
+    last_day = today + datetime.timedelta(days=CdaConfiguration.get().max_booking_days)
+    return (
+        TimeSlot.objects
+        .filter(is_active=True, date__range=(today, last_day))
+        .exclude(date=today, start_time__lte=now.time())
+        .annotate(active_count=Count(
+            'appointments', filter=Q(appointments__status__in=Appointment.ACTIVE_STATUSES),
+        ))
+        .filter(active_count__lt=F('capacity'))
+        .annotate(free_count=F('capacity') - F('active_count'))
+        .order_by('date', 'start_time')
+    )
