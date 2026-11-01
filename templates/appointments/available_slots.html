@@ -1,0 +1,44 @@
+{% extends 'layouts/public.html' %}
+
+{% block title %}Horarios disponibles - SIGECDA{% endblock title %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <h1 class="h4 mb-1">Horarios disponibles</h1>
+            <p class="text-muted small mb-4">
+                {{ configuration.cda_name }}{% if configuration.address %} · {{ configuration.address }}{% endif %}<br>
+                Puedes agendar hasta {{ configuration.max_booking_days }} día{{ configuration.max_booking_days|pluralize }} adelante.
+                {% if configuration.opening_hours %}Horario de atención: {{ configuration.opening_hours }}.{% endif %}
+            </p>
+
+            {% regroup slots by date as slots_by_date %}
+
+            {% for group in slots_by_date %}
+                <div class="card mb-3">
+                    <div class="card-header bg-white">
+                        <h2 class="h6 mb-0">{{ group.grouper|date:'l j \d\e F'|capfirst }}</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-2">
+                            {% for slot in group.list %}
+                                <div class="col">
+                                    <div class="border rounded text-center py-2 px-1 h-100">
+                                        <div class="fw-semibold">{{ slot.start_time|time:'H:i' }}</div>
+                                        <small class="text-muted">
+                                            {{ slot.free_count }} cupo{{ slot.free_count|pluralize }}
+                                        </small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="alert alert-light border text-center">
+                    En este momento no hay horarios disponibles. Vuelve a consultar más tarde.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock content %}

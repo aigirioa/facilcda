@@ -20,6 +20,9 @@
                 </a>
             </div>
             <p class="small text-muted mt-3">Estas opciones estarán disponibles próximamente.</p>
+            <a href="{% url 'appointments:available_slots' %}" class="d-inline-block mt-2">
+                <i class="mdi mdi-clock-outline"></i> Ver horarios disponibles
+            </a>
         </div>
     </div>
 {% endblock content %}
