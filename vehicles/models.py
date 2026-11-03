@@ -1,9 +1,17 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
 
 from customers.models import Owner
 
-from .validators import MIN_MODEL_YEAR, normalize_plate, validate_model_year, validate_plate
+from .validators import (
+    CAR_PLATE_REGEX,
+    MIN_MODEL_YEAR,
+    MOTORCYCLE_PLATE_REGEX,
+    normalize_plate,
+    validate_model_year,
+    validate_plate,
+)
 
 
 class Vehicle(models.Model):
@@ -42,9 +50,31 @@ class Vehicle(models.Model):
     def __str__(self):
         return self.plate
 
+    @classmethod
+    def plate_type_error(cls, vehicle_type, plate):
+        """Mensaje de error si la placa no corresponde al tipo de vehículo, o None si coincide.
+
+        Las motos usan ABC12D y los demás tipos ABC123. Si la placa no tiene ningún formato
+        válido, el error ya lo da validate_plate.
+        """
+        if not vehicle_type or not plate:
+            return None
+        if vehicle_type == cls.VehicleType.MOTORCYCLE:
+            if CAR_PLATE_REGEX.match(plate):
+                return 'Las motocicletas tienen placa con formato ABC12D (termina en letra).'
+        elif MOTORCYCLE_PLATE_REGEX.match(plate):
+            return 'Esta placa es de motocicleta (ABC12D). Elige el tipo "Motocicleta" o revisa la placa.'
+        return None
+
     def clean_fields(self, exclude=None):
         self.plate = normalize_plate(self.plate)
         super().clean_fields(exclude=exclude)
+
+    def clean(self):
+        super().clean()
+        error = self.plate_type_error(self.vehicle_type, self.plate)
+        if error:
+            raise ValidationError({'plate': error})
 
     def save(self, *args, **kwargs):
         self.plate = normalize_plate(self.plate)

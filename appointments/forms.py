@@ -138,6 +138,9 @@ class BookingForm(forms.Form):
         error = Owner.document_number_error(cleaned_data.get('document_type'), cleaned_data.get('document_number'))
         if error:
             self.add_error('document_number', error)
+        error = Vehicle.plate_type_error(cleaned_data.get('vehicle_type'), cleaned_data.get('plate'))
+        if error:
+            self.add_error('plate', error)
         return cleaned_data
 
     def owner_fields(self):

@@ -153,6 +153,3 @@ LOGIN_REDIRECT_URL = 'appointments:slot_list'
 
 LOGOUT_REDIRECT_URL = 'users:login'
 
-# Crispy forms
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-CRISPY_TEMPLATE_PACK = "bootstrap5"

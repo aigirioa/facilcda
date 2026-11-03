@@ -87,6 +87,43 @@ class VehicleModelTests(TestCase):
         self.assertIn('plate', ctx.exception.message_dict)
 
 
+class PlateTypeTests(TestCase):
+
+    def setUp(self):
+        self.owner = make_owner()
+
+    def build(self, plate, vehicle_type):
+        return Vehicle(plate=plate, vehicle_type=vehicle_type, brand='Marca', model_year=2020, owner=self.owner)
+
+    def test_matching_plate_and_type_are_valid(self):
+        for plate, vehicle_type in [
+            ('ABC12D', Vehicle.VehicleType.MOTORCYCLE),
+            ('ABC123', Vehicle.VehicleType.LIGHT_PRIVATE),
+            ('ABC123', Vehicle.VehicleType.LIGHT_PUBLIC),
+            ('ABC123', Vehicle.VehicleType.HEAVY),
+        ]:
+            with self.subTest(plate=plate, vehicle_type=vehicle_type):
+                self.build(plate, vehicle_type).full_clean()
+
+    def test_motorcycle_with_car_plate_is_rejected(self):
+        with self.assertRaises(ValidationError) as ctx:
+            self.build('ABC123', Vehicle.VehicleType.MOTORCYCLE).full_clean()
+
+        self.assertIn('ABC12D', ctx.exception.message_dict['plate'][0])
+
+    def test_car_with_motorcycle_plate_is_rejected(self):
+        for vehicle_type in [Vehicle.VehicleType.LIGHT_PRIVATE, Vehicle.VehicleType.LIGHT_PUBLIC, Vehicle.VehicleType.HEAVY]:
+            with self.subTest(vehicle_type=vehicle_type), self.assertRaises(ValidationError) as ctx:
+                self.build('ABC12D', vehicle_type).full_clean()
+            self.assertIn('plate', ctx.exception.message_dict)
+
+    def test_invalid_plate_shows_only_the_format_error(self):
+        with self.assertRaises(ValidationError) as ctx:
+            self.build('A1', Vehicle.VehicleType.MOTORCYCLE).full_clean()
+
+        self.assertEqual(len(ctx.exception.message_dict['plate']), 1)
+
+
 class VehicleConstraintTests(TestCase):
 
     def setUp(self):
@@ -159,3 +196,13 @@ class VehicleAdminFormTests(TestCase):
 
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.save().plate, 'ABC123')
+
+    def test_admin_form_rejects_motorcycle_with_car_plate(self):
+        owner = make_owner()
+        form = VehicleAdminForm(data={
+            'plate': 'abc 123', 'vehicle_type': Vehicle.VehicleType.MOTORCYCLE,
+            'brand': 'Yamaha', 'model_year': 2020, 'owner': owner.pk,
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('plate', form.errors)

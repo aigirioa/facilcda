@@ -266,6 +266,20 @@ class BookingViewTests(TestCase):
         self.assertIn('plate', response.context['form'].errors)
         self.assertFalse(Appointment.objects.exists())
 
+    def test_motorcycle_with_car_plate_is_rejected(self):
+        response = self.client.post(self.url, form_data(plate='ABC123', vehicle_type=Vehicle.VehicleType.MOTORCYCLE))
+
+        self.assertFormError(
+            response.context['form'], 'plate', 'Las motocicletas tienen placa con formato ABC12D (termina en letra).',
+        )
+        self.assertFalse(Appointment.objects.exists())
+
+    def test_car_with_motorcycle_plate_is_rejected(self):
+        response = self.client.post(self.url, form_data(plate='ABC12D'))
+
+        self.assertIn('plate', response.context['form'].errors)
+        self.assertFalse(Appointment.objects.exists())
+
     def test_document_with_letters_is_rejected_for_cc(self):
         response = self.client.post(self.url, form_data(document_number='10203A'))
 
