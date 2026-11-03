@@ -12,9 +12,16 @@ from configuration.models import CdaConfiguration
 from facilcda.dates import local_today
 from users.mixins import CdaAdminRequiredMixin
 
-from .forms import TimeSlotBatchForm
+from .forms import BookingForm, TimeSlotBatchForm
 from .models import Appointment, TimeSlot
-from .services import available_time_slots, create_time_slots
+from .services import (
+    SLOT_UNAVAILABLE_MESSAGE,
+    BookingError,
+    SlotUnavailableError,
+    available_time_slots,
+    book_appointment,
+    create_time_slots,
+)
 
 
 def slot_list_url(date):
@@ -34,6 +41,44 @@ class AvailableTimeSlotListView(ListView):
         context = super().get_context_data(**kwargs)
         context['configuration'] = CdaConfiguration.get()
         return context
+
+
+class BookingView(FormView):
+    """Vista pública: datos del propietario y del vehículo para agendar en la franja elegida."""
+
+    template_name = 'appointments/booking_form.html'
+    form_class = BookingForm
+
+    def dispatch(self, request, *args, **kwargs):
+        self.slot = available_time_slots().filter(pk=kwargs['slot_id']).first()
+        if self.slot is None:
+            messages.warning(request, SLOT_UNAVAILABLE_MESSAGE)
+            return redirect('appointments:available_slots')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['slot'] = self.slot
+        context['configuration'] = CdaConfiguration.get()
+        return context
+
+    def form_valid(self, form):
+        try:
+            appointment = book_appointment(self.slot.pk, form.owner_data(), form.vehicle_data())
+        except SlotUnavailableError as error:
+            messages.warning(self.request, str(error))
+            return redirect('appointments:available_slots')
+        except BookingError as error:
+            form.add_error(None, str(error))
+            return self.form_invalid(form)
+
+        # La página de confirmación con todos los datos llega en el paso 2.3.
+        messages.success(
+            self.request,
+            f'Tu cita quedó agendada para el {appointment.slot.date:%d/%m/%Y} a las '
+            f'{appointment.slot.start_time:%H:%M}, turno {appointment.turn}. Código de la cita: {appointment.code}.',
+        )
+        return redirect('home')
 
 
 class TimeSlotListView(CdaAdminRequiredMixin, ListView):

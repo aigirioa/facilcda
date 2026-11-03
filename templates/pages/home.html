@@ -12,17 +12,14 @@
             </p>
 
             <div class="d-grid gap-3">
-                <a href="#" class="btn btn-primary btn-lg disabled" role="button" aria-disabled="true">
+                <a href="{% url 'appointments:available_slots' %}" class="btn btn-primary btn-lg">
                     <i class="mdi mdi-calendar-plus"></i> Agendar cita
                 </a>
                 <a href="#" class="btn btn-outline-primary btn-lg disabled" role="button" aria-disabled="true">
                     <i class="mdi mdi-magnify"></i> Consultar mi revisión
                 </a>
             </div>
-            <p class="small text-muted mt-3">Estas opciones estarán disponibles próximamente.</p>
-            <a href="{% url 'appointments:available_slots' %}" class="d-inline-block mt-2">
-                <i class="mdi mdi-clock-outline"></i> Ver horarios disponibles
-            </a>
+            <p class="small text-muted mt-3">La consulta de la revisión estará disponible próximamente.</p>
         </div>
     </div>
 {% endblock content %}

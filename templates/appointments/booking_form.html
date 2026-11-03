@@ -1,0 +1,80 @@
+{% extends 'layouts/public.html' %}
+
+{% block title %}Agendar cita - SIGECDA{% endblock title %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <h1 class="h4 mb-3">Agendar cita</h1>
+
+            <div class="card border-primary mb-3">
+                <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <div class="small text-muted">Horario elegido</div>
+                        <div class="fw-semibold">
+                            {{ slot.date|date:'l j \d\e F'|capfirst }} · {{ slot.start_time|time:'H:i' }} a {{ slot.end_time|time:'H:i' }}
+                        </div>
+                        <div class="small text-muted">
+                            {{ configuration.cda_name }}{% if configuration.address %} · {{ configuration.address }}{% endif %}
+                        </div>
+                    </div>
+                    <a href="{% url 'appointments:available_slots' %}" class="btn btn-sm btn-outline-primary">Cambiar horario</a>
+                </div>
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="card mb-3">
+                    <div class="card-header bg-white"><h2 class="h6 mb-0">1. Tus datos</h2></div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% for field in form.owner_fields %}
+                                {% include 'partials/form_field.html' with field=field col='col-12 col-sm-6' %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-white"><h2 class="h6 mb-0">2. Tu vehículo</h2></div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% for field in form.vehicle_fields %}
+                                {% include 'partials/form_field.html' with field=field col='col-12 col-sm-6' %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header bg-white"><h2 class="h6 mb-0">3. Tratamiento de datos personales</h2></div>
+                    <div class="card-body">
+                        <div class="border rounded bg-light p-3 small mb-3 overflow-auto" style="max-height: 12rem;">
+                            {{ configuration.data_processing_text|linebreaksbr }}
+                        </div>
+                        <div class="form-check">
+                            {{ form.accepts_data_processing }}
+                            <label class="form-check-label" for="{{ form.accepts_data_processing.id_for_label }}">
+                                {{ form.accepts_data_processing.label }}
+                            </label>
+                            {% for error in form.accepts_data_processing.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid d-sm-flex justify-content-sm-end mb-4">
+                    <button type="submit" class="btn btn-primary btn-lg">Agendar cita</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

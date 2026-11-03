@@ -9,6 +9,7 @@ from django.utils import timezone
 from appointments.models import Appointment, TimeSlot
 from customers.models import Owner
 
+from .forms import PlateField, VehicleAdminForm
 from .models import Vehicle
 from .validators import normalize_plate, validate_model_year, validate_plate
 
@@ -128,3 +129,33 @@ class VehicleHistoryTests(TestCase):
         new = Appointment.objects.create(vehicle=vehicle, owner=owner, slot=new_slot, turn=1)
 
         self.assertEqual(list(vehicle.history()), [new, old])
+
+
+class PlateFieldTests(SimpleTestCase):
+
+    def test_normalizes_before_validating(self):
+        field = PlateField()
+        for value, expected in [('abc 123', 'ABC123'), ('abc-12d', 'ABC12D'), (' ABC123 ', 'ABC123')]:
+            with self.subTest(value=value):
+                self.assertEqual(field.clean(value), expected)
+
+    def test_rejects_invalid_plates(self):
+        for value in ['AB1234', 'ABC 1234', '']:
+            with self.subTest(value=value), self.assertRaises(ValidationError):
+                PlateField().clean(value)
+
+    def test_input_allows_typing_spaces_or_hyphen(self):
+        self.assertEqual(PlateField().widget.attrs['maxlength'], '8')
+
+
+class VehicleAdminFormTests(TestCase):
+
+    def test_admin_form_accepts_plate_with_spaces(self):
+        owner = make_owner()
+        form = VehicleAdminForm(data={
+            'plate': 'abc 123', 'vehicle_type': Vehicle.VehicleType.LIGHT_PRIVATE,
+            'brand': 'Renault', 'model_year': 2018, 'owner': owner.pk,
+        })
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.save().plate, 'ABC123')

@@ -63,16 +63,23 @@ class Owner(models.Model):
         self.sync_consent_date()
         super().clean_fields(exclude=exclude)
 
+    @classmethod
+    def document_number_error(cls, document_type, number):
+        """Mensaje de error del número de documento, o None si es válido."""
+        if not number:
+            return None
+        if document_type == cls.DocumentType.PA:
+            if not number.isalnum():
+                return 'El pasaporte solo puede tener letras y números.'
+        elif not number.isdigit():
+            return 'El número de documento solo puede tener dígitos.'
+        return None
+
     def clean(self):
         super().clean()
-        number = self.document_number
-        if not number:
-            return
-        if self.document_type == self.DocumentType.PA:
-            if not number.isalnum():
-                raise ValidationError({'document_number': 'El pasaporte solo puede tener letras y números.'})
-        elif not number.isdigit():
-            raise ValidationError({'document_number': 'El número de documento solo puede tener dígitos.'})
+        error = self.document_number_error(self.document_type, self.document_number)
+        if error:
+            raise ValidationError({'document_number': error})
 
     def save(self, *args, **kwargs):
         self.document_number = self.normalize_document_number(self.document_number)
