@@ -4,9 +4,10 @@ from django.contrib import messages
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views import View
-from django.views.generic import FormView, ListView
+from django.views.generic import FormView, ListView, TemplateView
 
 from configuration.models import CdaConfiguration
 from facilcda.dates import local_today
@@ -22,6 +23,11 @@ from .services import (
     book_appointment,
     create_time_slots,
 )
+
+
+# Cita recién agendada que puede ver la sesión en la página de confirmación.
+CONFIRMATION_SESSION_KEY = 'confirmed_appointment'
+CONFIRMATION_MAX_AGE = datetime.timedelta(minutes=30)
 
 
 def slot_list_url(date):
@@ -72,13 +78,47 @@ class BookingView(FormView):
             form.add_error(None, str(error))
             return self.form_invalid(form)
 
-        # La página de confirmación con todos los datos llega en el paso 2.3.
-        messages.success(
-            self.request,
-            f'Tu cita quedó agendada para el {appointment.slot.date:%d/%m/%Y} a las '
-            f'{appointment.slot.start_time:%H:%M}, turno {appointment.turn}. Código de la cita: {appointment.code}.',
+        self.request.session[CONFIRMATION_SESSION_KEY] = {
+            'appointment_id': appointment.pk,
+            'booked_at': timezone.now().timestamp(),
+        }
+        return redirect('appointments:booking_confirmation')
+
+
+class BookingConfirmationView(TemplateView):
+    """Vista pública: confirmación de la cita recién agendada.
+
+    La URL no lleva el id ni el código de la cita: se toma de la sesión de quien agendó, así nadie
+    ve una cita ajena cambiando la dirección. El acceso vence a los CONFIRMATION_MAX_AGE.
+    """
+
+    template_name = 'appointments/booking_confirmation.html'
+
+    def get(self, request, *args, **kwargs):
+        self.appointment = self.get_appointment()
+        if self.appointment is None:
+            return redirect('home')
+        return super().get(request, *args, **kwargs)
+
+    def get_appointment(self):
+        data = self.request.session.get(CONFIRMATION_SESSION_KEY)
+        if not data:
+            return None
+        if timezone.now().timestamp() - data['booked_at'] > CONFIRMATION_MAX_AGE.total_seconds():
+            del self.request.session[CONFIRMATION_SESSION_KEY]
+            return None
+        return (
+            Appointment.objects
+            .select_related('slot', 'vehicle', 'owner')
+            .filter(pk=data['appointment_id'])
+            .first()
         )
-        return redirect('home')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['appointment'] = self.appointment
+        context['configuration'] = CdaConfiguration.get()
+        return context
 
 
 class TimeSlotListView(CdaAdminRequiredMixin, ListView):

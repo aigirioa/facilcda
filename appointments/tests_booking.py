@@ -237,7 +237,7 @@ class BookingViewTests(TestCase):
         response = self.client.post(self.url, form_data(), follow=True)
 
         appointment = Appointment.objects.get()
-        self.assertRedirects(response, reverse('home'))
+        self.assertRedirects(response, reverse('appointments:booking_confirmation'))
         self.assertContains(response, appointment.code)
         self.assertEqual(appointment.slot, self.slot)
 
@@ -330,3 +330,76 @@ class BookingViewTests(TestCase):
         response = self.client.get(reverse('home'))
 
         self.assertContains(response, f'href="{reverse("appointments:available_slots")}" class="btn btn-primary btn-lg"')
+
+
+class BookingConfirmationViewTests(TestCase):
+
+    def setUp(self):
+        configuration = CdaConfiguration.get()
+        configuration.cda_name = 'CDA de prueba'
+        configuration.address = 'Calle 10 # 20-30'
+        configuration.save()
+        self.slot = make_slot(day_offset=2, hour=9)
+        self.confirmation_url = reverse('appointments:booking_confirmation')
+
+    def book(self, client=None, **kwargs):
+        client = client or self.client
+        return client.post(reverse('appointments:book', args=[self.slot.pk]), form_data(**kwargs))
+
+    def test_shows_code_date_time_turn_and_cda_address(self):
+        self.book()
+        appointment = Appointment.objects.get()
+
+        response = self.client.get(self.confirmation_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'appointments/booking_confirmation.html')
+        self.assertContains(response, appointment.code)
+        self.assertContains(response, f'{self.slot.date.day} de')
+        self.assertContains(response, '09:00 a 09:30')
+        self.assertContains(response, f'<span class="fw-semibold text-end">{appointment.turn}</span>', html=True)
+        self.assertContains(response, 'CDA de prueba')
+        self.assertContains(response, 'Calle 10 # 20-30')
+        self.assertContains(response, 'ABC123')
+
+    def test_second_booking_shows_its_own_turn(self):
+        self.book()
+        self.book(document_number='99887766', plate='XYZ987')
+
+        response = self.client.get(self.confirmation_url)
+
+        second = Appointment.objects.get(vehicle__plate='XYZ987')
+        self.assertEqual(second.turn, 2)
+        self.assertContains(response, second.code)
+        self.assertNotContains(response, Appointment.objects.get(vehicle__plate='ABC123').code)
+
+    def test_without_booking_redirects_home(self):
+        response = self.client.get(self.confirmation_url)
+
+        self.assertRedirects(response, reverse('home'))
+
+    def test_another_session_cannot_see_the_appointment(self):
+        self.book()
+
+        response = self.client_class().get(self.confirmation_url)
+
+        self.assertRedirects(response, reverse('home'))
+
+    def test_access_expires_after_thirty_minutes(self):
+        self.book()
+        session = self.client.session
+        session['confirmed_appointment']['booked_at'] -= 31 * 60
+        session.save()
+
+        response = self.client.get(self.confirmation_url)
+
+        self.assertRedirects(response, reverse('home'))
+        self.assertNotIn('confirmed_appointment', self.client.session)
+
+    def test_failed_booking_does_not_open_the_confirmation(self):
+        self.book(accepts_data_processing='')
+
+        response = self.client.get(self.confirmation_url)
+
+        self.assertFalse(Appointment.objects.exists())
+        self.assertRedirects(response, reverse('home'))
