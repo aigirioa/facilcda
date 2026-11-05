@@ -388,7 +388,7 @@ class BookingConfirmationViewTests(TestCase):
     def test_access_expires_after_thirty_minutes(self):
         self.book()
         session = self.client.session
-        session['confirmed_appointment']['booked_at'] -= 31 * 60
+        session['confirmed_appointment']['granted_at'] -= 31 * 60
         session.save()
 
         response = self.client.get(self.confirmation_url)

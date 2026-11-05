@@ -151,3 +151,18 @@ def book_appointment(slot_id, owner_data, vehicle_data):
             if vehicle.appointments.active().exists():
                 raise PlateHasActiveAppointmentError(PLATE_HAS_ACTIVE_APPOINTMENT_MESSAGE.format(plate=plate))
             raise SlotUnavailableError(SLOT_FULL_MESSAGE)
+
+
+def find_appointment(plate, document_number):
+    """Cita de la placa agendada con ese número de documento: la activa o, si no hay, la más reciente.
+
+    Devuelve None si no coinciden, sin distinguir si falló la placa o el documento.
+    """
+    appointments = Appointment.objects.filter(
+        vehicle__plate=normalize_plate(plate),
+        owner__document_number=Owner.normalize_document_number(document_number),
+    )
+    return (
+        appointments.active().first()
+        or appointments.order_by('-slot__date', '-slot__start_time', '-created_at').first()
+    )

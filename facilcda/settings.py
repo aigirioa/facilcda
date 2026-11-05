@@ -88,7 +88,7 @@ WSGI_APPLICATION = 'facilcda.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': config('DB_ENGINE', default = 'django.db.backends.postgresql_psycopg2'),
+        'ENGINE': config('DB_ENGINE', default = 'django.db.backends.postgresql'),
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
@@ -96,6 +96,18 @@ DATABASES = {
         'PORT': config('DB_PORT'),
     }
 }
+
+# Caché en la base de datos: la comparten todos los procesos de gunicorn, sin Redis.
+# La tabla se crea con: python manage.py createcachetable
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'django_cache',
+    }
+}
+
+# True solo detrás de un proxy que agrega la IP del cliente en X-Forwarded-For.
+USE_X_FORWARDED_FOR = config('USE_X_FORWARDED_FOR', cast = bool, default = False)
 
 
 # Password validation

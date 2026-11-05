@@ -154,3 +154,16 @@ class BookingForm(forms.Form):
 
     def vehicle_data(self):
         return {name: self.cleaned_data[name] for name in VEHICLE_FIELDS}
+
+
+class AppointmentLookupForm(forms.Form):
+    """Consulta pública de la cita con la placa y el número de documento de quien la agendó."""
+
+    plate = PlateField(label='Placa del vehículo', widget=forms.TextInput(attrs={'class': 'form-control'}))
+    document_number = forms.CharField(
+        label='Número de documento', max_length=20,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'inputmode': 'text', 'autocomplete': 'off'}),
+    )
+
+    def clean_document_number(self):
+        return Owner.normalize_document_number(self.cleaned_data['document_number'])

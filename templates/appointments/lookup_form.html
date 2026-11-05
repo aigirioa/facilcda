@@ -1,0 +1,43 @@
+{% extends 'layouts/public.html' %}
+
+{% block title %}Consultar mi cita - SIGECDA{% endblock title %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-5">
+            <h1 class="h4 mb-1">Consultar mi cita</h1>
+            <p class="text-muted mb-4">
+                Escribe la placa del vehículo y el número de documento de la persona que agendó la cita.
+            </p>
+
+            {% if blocked %}
+                <div class="alert alert-warning" role="alert">
+                    Hiciste demasiados intentos. Espera unos minutos (máximo 15) e inténtalo de nuevo.
+                </div>
+            {% elif form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            {% include 'partials/form_field.html' with field=form.plate %}
+                            {% include 'partials/form_field.html' with field=form.document_number %}
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">Consultar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <p class="small text-muted text-center">
+                ¿Todavía no tienes cita? <a href="{% url 'appointments:available_slots' %}">Agenda una aquí</a>.
+            </p>
+        </div>
+    </div>
+{% endblock content %}

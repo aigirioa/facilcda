@@ -1,0 +1,32 @@
+{% extends 'layouts/public.html' %}
+
+{% block title %}Mi cita - SIGECDA{% endblock title %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+                <h1 class="h4 mb-0">Mi cita</h1>
+                <span class="badge {{ status_badge }} fs-6">{{ appointment.get_status_display }}</span>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body text-center">
+                    <div class="small text-muted">Código de la cita</div>
+                    <div class="fs-3 fw-bold font-monospace">{{ appointment.code }}</div>
+                </div>
+            </div>
+
+            {% include 'appointments/partials/appointment_details.html' %}
+
+            <p class="small text-muted">
+                Por seguridad, esta consulta se cierra sola a los 30 minutos. Si usas un equipo compartido, ciérrala al terminar.
+            </p>
+
+            <form method="post" action="{% url 'appointments:my_appointment_exit' %}" class="d-grid mb-4">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-primary">Cerrar consulta</button>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

@@ -18,6 +18,9 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'available_slots' %}active{% endif %}" href="{% url 'appointments:available_slots' %}">Horarios</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'lookup' or request.resolver_match.url_name == 'my_appointment' %}active{% endif %}" href="{% url 'appointments:lookup' %}">Consultar mi cita</a>
+                    </li>
                     {% block public_nav_items %}{% endblock public_nav_items %}
                 </ul>
             </div>

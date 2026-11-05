@@ -1,0 +1,41 @@
+<div class="card mb-3">
+    <div class="card-header bg-white"><h2 class="h6 mb-0">Datos de la cita</h2></div>
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item d-flex justify-content-between gap-3">
+            <span class="text-muted">Fecha</span>
+            <span class="fw-semibold text-end">{{ appointment.slot.date|date:'l j \d\e F \d\e Y'|capfirst }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between gap-3">
+            <span class="text-muted">Hora</span>
+            <span class="fw-semibold text-end">{{ appointment.slot.start_time|time:'H:i' }} a {{ appointment.slot.end_time|time:'H:i' }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between gap-3">
+            <span class="text-muted">Turno</span>
+            <span class="fw-semibold text-end">{{ appointment.turn }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between gap-3">
+            <span class="text-muted">Vehículo</span>
+            <span class="fw-semibold text-end">{{ appointment.vehicle.plate }} · {{ appointment.vehicle.get_vehicle_type_display }}</span>
+        </li>
+        <li class="list-group-item d-flex justify-content-between gap-3">
+            <span class="text-muted">A nombre de</span>
+            <span class="fw-semibold text-end">{{ appointment.owner.full_name }}</span>
+        </li>
+    </ul>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header bg-white"><h2 class="h6 mb-0">Dónde presentarte</h2></div>
+    <div class="card-body">
+        <div class="fw-semibold">{{ configuration.cda_name }}</div>
+        {% if configuration.address %}
+            <div><i class="mdi mdi-map-marker-outline"></i> {{ configuration.address }}</div>
+        {% endif %}
+        {% if configuration.phone %}
+            <div><i class="mdi mdi-phone-outline"></i> {{ configuration.phone }}</div>
+        {% endif %}
+        {% if configuration.opening_hours %}
+            <div class="small text-muted mt-1">Horario de atención: {{ configuration.opening_hours }}</div>
+        {% endif %}
+    </div>
+</div>
