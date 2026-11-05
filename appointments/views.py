@@ -22,13 +22,17 @@ from .access import (
 from .forms import AppointmentLookupForm, BookingForm, TimeSlotBatchForm
 from .models import Appointment, TimeSlot
 from .services import (
+    NOT_CHANGEABLE_MESSAGE,
     SLOT_UNAVAILABLE_MESSAGE,
+    AppointmentNotChangeableError,
     BookingError,
     SlotUnavailableError,
     available_time_slots,
     book_appointment,
+    cancel_appointment,
     create_time_slots,
     find_appointment,
+    reschedule_appointment,
 )
 from .throttling import client_ip, is_lookup_blocked, register_lookup_failure
 
@@ -41,7 +45,7 @@ STATUS_BADGES = {
     Appointment.Status.RECEIVED: 'text-bg-info',
     Appointment.Status.IN_PROGRESS: 'text-bg-warning',
     Appointment.Status.FINISHED: 'text-bg-success',
-    Appointment.Status.CANCELLED: 'text-bg-secondary',
+    Appointment.Status.CANCELLED: 'text-bg-danger',
     Appointment.Status.NO_SHOW: 'text-bg-danger',
 }
 
@@ -107,7 +111,7 @@ class SessionAppointmentView(TemplateView):
     session_key = None
     no_access_url = 'home'
 
-    def get(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         appointment_id = granted_appointment_id(request.session, self.session_key)
         self.appointment = (
             Appointment.objects
@@ -117,7 +121,7 @@ class SessionAppointmentView(TemplateView):
         ) if appointment_id else None
         if self.appointment is None:
             return self.no_access()
-        return super().get(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
     def no_access(self):
         return redirect(self.no_access_url)
@@ -175,6 +179,68 @@ class MyAppointmentView(SessionAppointmentView):
         context = super().get_context_data(**kwargs)
         context['status_badge'] = STATUS_BADGES[self.appointment.status]
         return context
+
+
+class AppointmentChangeView(MyAppointmentView):
+    """Base de reprogramar y cancelar (HU-06): la cita de "Mi cita", si todavía se puede cambiar.
+
+    GET muestra la página; POST hace el cambio con change().
+    """
+
+    def get(self, request, *args, **kwargs):
+        if not self.appointment.can_be_changed:
+            return self.not_changeable(NOT_CHANGEABLE_MESSAGE)
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if not self.appointment.can_be_changed:
+            return self.not_changeable(NOT_CHANGEABLE_MESSAGE)
+        try:
+            return self.change()
+        except AppointmentNotChangeableError as error:
+            return self.not_changeable(str(error))
+
+    def not_changeable(self, message):
+        messages.warning(self.request, message)
+        return redirect('appointments:my_appointment')
+
+    def change(self):
+        raise NotImplementedError
+
+
+class RescheduleAppointmentView(AppointmentChangeView):
+    """Vista pública: elegir otra franja para la cita."""
+
+    template_name = 'appointments/reschedule_form.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['slots'] = available_time_slots().exclude(pk=self.appointment.slot_id)
+        return context
+
+    def change(self):
+        try:
+            slot_id = int(self.request.POST.get('slot', ''))
+        except ValueError:
+            slot_id = None
+        try:
+            reschedule_appointment(self.appointment.pk, slot_id)
+        except SlotUnavailableError as error:
+            messages.warning(self.request, str(error))
+            return redirect('appointments:reschedule_appointment')
+        messages.success(self.request, 'Reprogramamos tu cita. Revisa la nueva fecha, hora y turno.')
+        return redirect('appointments:my_appointment')
+
+
+class CancelAppointmentView(AppointmentChangeView):
+    """Vista pública: pide confirmación y cancela la cita."""
+
+    template_name = 'appointments/cancel_confirm.html'
+
+    def change(self):
+        cancel_appointment(self.appointment.pk)
+        messages.success(self.request, 'Cancelaste tu cita. Si lo necesitas, puedes agendar una nueva.')
+        return redirect('appointments:my_appointment')
 
 
 class MyAppointmentExitView(View):

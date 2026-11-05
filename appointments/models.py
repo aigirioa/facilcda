@@ -5,6 +5,7 @@ from django.db import models
 from django.db.models import F, Q
 
 from customers.models import Owner
+from facilcda.dates import local_now
 from vehicles.models import Vehicle
 
 
@@ -63,7 +64,7 @@ class Appointment(models.Model):
 
     class Status(models.TextChoices):
         SCHEDULED = 'SCHEDULED', 'Agendada'
-        RECEIVED = 'RECEIVED', 'Recibida'
+        RECEIVED = 'RECEIVED', 'Recibido'
         IN_PROGRESS = 'IN_PROGRESS', 'En revisión'
         FINISHED = 'FINISHED', 'Finalizada'
         CANCELLED = 'CANCELLED', 'Cancelada'
@@ -110,6 +111,15 @@ class Appointment(models.Model):
     @property
     def is_active(self):
         return self.status in self.ACTIVE_STATUSES
+
+    @property
+    def can_be_changed(self):
+        """Se puede reprogramar o cancelar: está agendada y su franja no ha empezado (hora de Bogotá)."""
+        now = local_now()
+        return (
+            self.status == self.Status.SCHEDULED
+            and (self.slot.date, self.slot.start_time) > (now.date(), now.time())
+        )
 
     def clean(self):
         super().clean()

@@ -1,0 +1,32 @@
+{% extends 'layouts/public.html' %}
+
+{% block title %}Cancelar cita - SIGECDA{% endblock title %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <h1 class="h4 mb-3">Cancelar cita</h1>
+
+            <div class="card border-danger mb-3">
+                <div class="card-body">
+                    <p class="mb-2">¿Seguro que quieres cancelar esta cita?</p>
+                    <div class="fw-semibold">
+                        {{ appointment.slot.date|date:'l j \d\e F \d\e Y'|capfirst }} · {{ appointment.slot.start_time|time:'H:i' }} a {{ appointment.slot.end_time|time:'H:i' }}
+                    </div>
+                    <div class="small text-muted">
+                        Cita {{ appointment.code }} · Turno {{ appointment.turn }} · {{ appointment.vehicle.plate }}
+                    </div>
+                    <p class="small text-muted mt-2 mb-0">
+                        El turno quedará libre para otra persona. Si después necesitas la revisión, tendrás que agendar una cita nueva.
+                    </p>
+                </div>
+            </div>
+
+            <form method="post" class="d-grid d-sm-flex gap-2 mb-4">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Sí, cancelar la cita</button>
+                <a href="{% url 'appointments:my_appointment' %}" class="btn btn-outline-primary">No, volver a mi cita</a>
+            </form>
+        </div>
+    </div>
+{% endblock content %}

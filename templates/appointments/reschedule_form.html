@@ -1,0 +1,57 @@
+{% extends 'layouts/public.html' %}
+
+{% block title %}Reprogramar cita - SIGECDA{% endblock title %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <h1 class="h4 mb-3">Reprogramar cita</h1>
+
+            <div class="card border-primary mb-3">
+                <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <div class="small text-muted">Horario actual · cita {{ appointment.code }}</div>
+                        <div class="fw-semibold">
+                            {{ appointment.slot.date|date:'l j \d\e F'|capfirst }} · {{ appointment.slot.start_time|time:'H:i' }} a {{ appointment.slot.end_time|time:'H:i' }}
+                        </div>
+                        <div class="small text-muted">Turno {{ appointment.turn }} · {{ appointment.vehicle.plate }}</div>
+                    </div>
+                    <a href="{% url 'appointments:my_appointment' %}" class="btn btn-sm btn-outline-primary">Volver a mi cita</a>
+                </div>
+            </div>
+
+            <p class="mb-4">
+                Elige el nuevo horario. Tu cita conserva el mismo código y el horario actual queda libre para otra persona.
+            </p>
+
+            {% regroup slots by date as slots_by_date %}
+
+            <form method="post">
+                {% csrf_token %}
+                {% for group in slots_by_date %}
+                    <div class="card mb-3">
+                        <div class="card-header bg-white">
+                            <h2 class="h6 mb-0">{{ group.grouper|date:'l j \d\e F'|capfirst }}</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-2">
+                                {% for slot in group.list %}
+                                    <div class="col">
+                                        <button type="submit" name="slot" value="{{ slot.pk }}" class="btn btn-outline-primary w-100 h-100 py-2">
+                                            <span class="d-block fw-semibold">{{ slot.start_time|time:'H:i' }}</span>
+                                            <small>{{ slot.free_count }} cupo{{ slot.free_count|pluralize }}</small>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="alert alert-light border text-center">
+                        En este momento no hay otros horarios disponibles. Tu cita sigue en el horario actual.
+                    </div>
+                {% endfor %}
+            </form>
+        </div>
+    </div>
+{% endblock content %}

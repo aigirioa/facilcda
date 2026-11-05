@@ -19,6 +19,21 @@
 
             {% include 'appointments/partials/appointment_details.html' %}
 
+            {% if appointment.can_be_changed %}
+                <div class="d-grid d-sm-flex gap-2 mb-3">
+                    <a href="{% url 'appointments:reschedule_appointment' %}" class="btn btn-primary">Reprogramar</a>
+                    <a href="{% url 'appointments:cancel_appointment' %}" class="btn btn-outline-danger">Cancelar cita</a>
+                </div>
+            {% elif appointment.status == 'SCHEDULED' %}
+                <div class="alert alert-light border small">
+                    El horario de tu cita ya empezó, así que ya no se puede reprogramar ni cancelar.
+                </div>
+            {% elif not appointment.is_active %}
+                <div class="d-grid d-sm-flex mb-3">
+                    <a href="{% url 'appointments:available_slots' %}" class="btn btn-primary">Agendar una nueva cita</a>
+                </div>
+            {% endif %}
+
             <p class="small text-muted">
                 Por seguridad, esta consulta se cierra sola a los 30 minutos. Si usas un equipo compartido, ciérrala al terminar.
             </p>
